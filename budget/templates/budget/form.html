@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_title %}Mes Budgets{% endblock %}
+
+{% block extra_css %}
+<style>
+    .formset-container {
+        background: white;
+        border-radius: 28px;
+        box-shadow: var(--card-shadow, 0 8px 20px rgba(0, 0, 0, 0.03));
+        padding: 1.5rem;
+        transition: all 0.2s;
+    }
+    .formset-table th{
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #475569;
+        border-bottom-width: 1px;
+        padding: 1rem 0.75rem;
+    }
+    .formset-table td {
+        vertical-align: middle;
+        padding: 0.75rem;
+    }
+
+    .formset-table input,
+    .formset-table select,
+    .formset-table textarea {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        padding: O.5rem 0.75rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .formset-table input:focus,
+    .formset-table select:focus,
+    .formset-table textarea:focus {
+        border-color: #2d6a4f;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    }
+    .delete-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #dc3545;
+    }
+
+    @media (max-width: 991.98px){
+        .table-responsive-stack {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .formset-table {
+            min-width: 800px;
+        }
+    }
+
+    .formset-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .btn-add-row {
+        background-color: #f1f5f9;
+        border: 1px dashed #cbd5e1;
+        border-radius: 60px;
+        padding: 0.5rem 1.2rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .btn-add-row:hover {
+        background-color: #e6f7ef;
+        border-color: #2d6a4f;
+        color: #2d6a4f;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid px-0">
+        <div class="formset-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-semibold mb1">
+                        Ajout rapide
+                    </h4>
+                    <p class="text-muted">Saississez plusieurs transactions</p>
+                </div>
+                <button type="button" class="btn-add-row" id="addBtn">
+                    <i class="fas fa-plus"></i>Ajouter de ligne
+                </button>
+            </div>
+
+            <form method="post" id="transactionFormset" >
+                {% csrf_token %}
+                {{formset.management_form}}
+    
+                <div class="table-responsive-stack">
+                    <table class="table formset-table align-middle mb-3">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Montant</th>
+                                <th>catégorie</th>
+                                <th>type</th>
+                                <th>description</th>
+                                <th>date</th>
+                                <th class="text-center">supprimer</th>
+                            </tr>
+                        </thead>
+                        <tbody id="formset-body">
+                            {% for form in formset %}
+                        
+                                <tr class="form-row">
+                                    <td>{{form.amount}} </td>
+                                    <td>{{form.category}} </td>
+                                    <td>{{form.type}} </td>
+                                    <td>{{form.description}} </td>
+                                    <td>{{form.date}} </td>
+                                    <td>{{form.DELETE}} </td>
+                                    <td class="text-center">
+                                        <label class="delete-label">
+                                            {{ form.DELETE }}
+                                            supprimer
+                                        </label>
+                                    </td>
+                                </tr>
+                        
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+    
+                
+                <div class="d-flex justify-content-end gap-3 mt-3">
+                    <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="fas fa-times me-1"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success rounded-pill px-5">
+                        <i class="fas fa-save me-2"></i>Enregistrer toutes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.activeElement('DOMContenLoaded', function() {
+        const container = document.querySelector('#formset-body');
+        const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
+        const addBtn = document.getElementById('addRowBtn');
+
+        function getNewRowHtml(formIndex){
+            const lastRow = container.querySelector('.form-row:last-child');
+            if (!lastRow) return '';
+
+            const newRow = lastRow.cloneNode(true);
+
+            newRow.querySelectorAll('input,select, textarea').forEach(field => {
+                field.value = '';
+
+                if (field.type == 'checkbox') field.checked = false;
+
+            });
+
+            const regex = /-(\d+)-/g;
+            newRow.querySelectorAll('[name],[id]').forEach(field => {
+                if (field.name){
+                    field.name = field.name.replace(regex, `-${formIndex}-`);
+                }
+                if (field.id) {
+                    field.id = field.id.replace(regex, `-${formIndex}-`);
+                }
+            });
+
+            return newRow.outHTML;
+        }
+
+        addBtn.addEventListener('click', function(){
+            let currentCount = parseInt(totalForms.value);
+            const newIndex = currentCount;
+            const newRowHtml = getNewRowHtml(newIndex);
+
+            if (newRowHtml){
+                container.insertAdjacentHTML('beforeend',newRowHtml);
+                totalForms.value = currentCount + 1;
+            }else {
+                alert("impossible d'ajouter une ligne, veuillez soumettre le formulaire et réessayer.");
+            }
+        });
+
+        container.addEventListener('change', function(){
+            if (e.target.type === 'checkbox' && e.target.name.includes('DELETE')){
+                const row = e.target.closest('.form-row');
+                if (row) {
+                    if (e.target.checked){
+                        row.style.opacity = '0.5';
+                        row.style.backgroundColor = '#fef2f2';
+                    }else{
+                        row.style.opacity = '1';
+                        row.style.backgroundColor = '';
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

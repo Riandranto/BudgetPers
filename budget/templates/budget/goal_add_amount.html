@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_title %}Ajouter un montant{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 500px;">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <i class="fas fa-piggy-bank fa-3x text-success"></i>
+                <h4 class="fw-bold mt-3">Ajouter à l'objectif</h4>
+                <p class="text-muted">{{ goal.name }}</p>
+            </div>
+            
+            <div class="alert alert-info text-center mb-4">
+                <strong>Objectif: {{ goal.target_amount|floatformat:0 }} Ar</strong><br>
+                Déjà épargné: {{ goal.current_amount|floatformat:0 }} Ar
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Montant à ajouter (Ar)</label>
+                    <input type="number" name="amount" step="0.01" class="form-control form-control-lg rounded-3" required>
+                </div>
+                
+                <div class="d-flex gap-3">
+                    <a href="{% url 'goal_list' %}" class="btn btn-outline-secondary rounded-pill flex-grow-1">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-success rounded-pill flex-grow-1">
+                        <i class="fas fa-check me-2"></i>Ajouter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

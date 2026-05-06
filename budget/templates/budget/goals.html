@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_title %}Objectifs d'épargne{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Mes objectifs d'épargne</h4>
+            <p class="text-muted small">Atteignez vos rêves financiers</p>
+        </div>
+        <a href="{% url 'goal_create' %}" class="btn btn-success rounded-pill">
+            <i class="fas fa-plus me-2"></i>Nouvel objectif
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        {% for goal in goals %}
+        <div class="col-md-6 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ goal.name }}</h5>
+                            <span class="badge {% if goal.status == 'active' %}bg-success{% elif goal.status == 'completed' %}bg-info{% else %}bg-secondary{% endif %}">
+                                {{ goal.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'goal_add_amount' goal.id %}">
+                                        <i class="fas fa-plus-circle me-2"></i>Ajouter montant
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'goal_update' goal.id %}">
+                                        <i class="fas fa-edit me-2"></i>Modifier
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'goal_delete' goal.id %}">
+                                        <i class="fas fa-trash me-2"></i>Supprimer
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Progression: {{ goal.current_amount|floatformat:0 }} Ar</span>
+                            <span>Objectif: {{ goal.target_amount|floatformat:0 }} Ar</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: {{ goal.progress }}%"></div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <strong>{{ goal.progress|floatformat:1 }}%</strong> atteint
+                        </div>
+                    </div>
+                    
+                    <div class="row small text-muted mt-3">
+                        <div class="col-6">
+                            <i class="fas fa-clock me-1"></i>
+                            Échéance: {{ goal.deadline|date:"d/m/Y" }}
+                        </div>
+                        <div class="col-6">
+                            <i class="fas fa-hourglass-half me-1"></i>
+                            Reste: {{ goal.remaining|floatformat:0 }} Ar
+                        </div>
+                    </div>
+                    
+                    {% if goal.description %}
+                    <hr>
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-align-left me-1"></i>
+                        {{ goal.description|truncatechars:100 }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Aucun objectif d'épargne défini</p>
+                <a href="{% url 'goal_create' %}" class="btn btn-success rounded-pill">
+                    Créer mon premier objectif
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

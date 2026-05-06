@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_title %}Mes Budgets{% endblock %}
+{% block extra_css %}
+    <style>
+        .budget-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid;
+            border-radius: 20px;
+        }
+        .budget-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+        }
+        .progress-thin {
+            height: 8px;
+            border-radius: 20px;
+        }
+        .category-badge {
+            background-color: #eef2ff;
+            color: #1e293b;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .table-actions i {
+            font-size: 1.1rem;
+            margin:  0 4px;
+            cursor: pointer;
+            transition: color O.2s;
+        }
+        .table-actions i:hover {
+            color: #2d6a4f;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid px-0">
+        
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-semibold mb-1">Tous vos Budgets</h4>
+                <p class="text-muted small mb-0"></p>
+            </div>
+            <div class="d-flex gap-2 mt-2 mt-sm-0">
+                <button class="btn btn-outline-secondary rounded-pill btn-sm px-3">
+                    <i class="fas fa-filter me-1"></i>Filtrer
+                </button>
+                <button class="btn btn-success rounded-pill btn-sm px-3">
+                    <i class="fas fa-plus me-1"></i>
+                    <a href="{% url 'transaction_create' %}" style="color: white;">Créer un budget</a>
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive d-none d-md-block">
+            <table class="table table-hover shadow align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Catégorie</th><th>Montant</th>
+                        <th>Type</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                        <tr>
+                            <td>{{t.date}}</td>
+                            <td>{{t.category}} </td>
+                            <td>{{t.amount}}</td>
+                            <td><span class="badge bg-{% if t.type == 'income' %}success{% else %}danger{% endif %}">
+                                {{t.type}}
+                            </span></td>
+                            <td>
+                                <a href="{% url 'transaction_update' t.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="{% url 'transaction_delete' t.id %}" class="btn btn-danger btn-sm">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center py-5 text-muted d-none" id="empty-message">
+            <p>Aucun Budget pour le moment.</p>
+        </div>
+
+        <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-sm">
+                <li class="page-item disabled"><a class="page-link" href="#">Précédent</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item "><a class="page-link" href="#">2</a></li>
+                <li class="page-item "><a class="page-link" href="#">3</a></li>
+                <li class="page-item "><a class="page-link" href="#">Suivant</a></li>
+            </ul>
+        </nav>
+    </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableRows = document.querySelectorAll('tbody tr');
+        if(tableRows.length === 0) {
+            document.getElementById('empty-message')?.classList.remove('d-none');
+            document.querySelector('.table-responsive')?.classList.add('d-none');
+            document.querySelector('.d-md-none')?.classList.add('d-none');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Statistiques principales -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Total Revenus</p>
+                            <h3 class="fw-bold text-success mb-0">{{ total_income|floatformat:0 }} Ar</h3>
+                            <small class="text-muted">{{ current_month }}</small>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded-3">
+                            <i class="fas fa-arrow-up text-success fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Total Dépenses</p>
+                            <h3 class="fw-bold text-danger mb-0">{{ total_expense|floatformat:0 }} Ar</h3>
+                            <small class="text-muted">{{ current_month }}</small>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3">
+                            <i class="fas fa-arrow-down text-danger fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Solde</p>
+                            <h3 class="fw-bold text-info mb-0">{{ balance|floatformat:0 }} Ar</h3>
+                            <small class="text-muted">Revenus - Dépenses</small>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3">
+                            <i class="fas fa-wallet text-info fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Dépenses par catégorie -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-pie me-2 text-success"></i>
+                        Dépenses par catégorie
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if expenses_by_category %}
+                        {% for expense in expenses_by_category %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>{{ expense.category__name }}</span>
+                                <span class="fw-bold">{{ expense.total|floatformat:0 }} Ar</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: {% widthratio expense.total total_expense 100 %}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">Aucune dépense ce mois-ci</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Budgets du mois -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-chart-line me-2 text-success"></i>
+                        Suivi des budgets
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if monthly_budgets %}
+                        {% for budget in monthly_budgets %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>{{ budget.category.name }}</span>
+                                <span>{{ budget.get_spent_amount|floatformat:0 }} / {{ budget.amount|floatformat:0 }} Ar</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if budget.get_percentage_used > 90 %}bg-danger{% elif budget.get_percentage_used > 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     style="width: {{ budget.get_percentage_used }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            Aucun budget défini 
+                            <a href="{% url 'budget_create' %}" class="text-success">Créer un budget</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transactions récentes -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-history me-2 text-success"></i>
+                        Transactions récentes
+                    </h5>
+                    <a href="{% url 'transaction_list' %}" class="text-success">Voir tout →</a>
+                </div>
+                <div class="card-body p-4">
+                    {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Catégorie</th>
+                                        <th>Description</th>
+                                        <th>Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                    <tr>
+                                        <td>{{ transaction.date|date:"d/m/Y" }}</td>
+                                        <td>{{ transaction.category.name }}</td>
+                                        <td>{{ transaction.description|truncatechars:30 }}</td>
+                                        <td class="{% if transaction.type == 'income' %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {% if transaction.type == 'income' %}+{% else %}-{% endif %}
+                                            {{ transaction.amount|floatformat:0 }} Ar
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">
+                            Aucune transaction 
+                            <a href="{% url 'transaction_create' %}" class="text-success">Ajouter une transaction</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Objectifs d'épargne -->
+        {% if saving_goals %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-bullseye me-2 text-success"></i>
+                        Objectifs d'épargne
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        {% for goal in saving_goals %}
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-bold mb-0">{{ goal.name }}</h6>
+                                    <span class="badge bg-success">{{ goal.get_progress_percentage|floatformat:0 }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ goal.get_progress_percentage }}%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                    <span>{{ goal.current_amount|floatformat:0 }} Ar</span>
+                                    <span>objectif: {{ goal.target_amount|floatformat:0 }} Ar</span>
+                                </div>
+                                <small class="text-muted">Échéance: {{ goal.deadline|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
